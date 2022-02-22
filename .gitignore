@@ -1,0 +1,3 @@
+data/*
+*.pyc
+ebird.egg-info/*
