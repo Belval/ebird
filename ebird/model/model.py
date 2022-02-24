@@ -8,13 +8,13 @@ class Model(torch.nn.Module):
         """
         super(Model, self).__init__()
         self.backbone = get_backbone(config["BACKBONE"])
-        self.classification_head = torch.nn.Linear(
+        self.backbone.fc = torch.nn.Linear(
             config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"],
             config["CLASSIFICATION_HEAD"]["OUTPUT_FEATURES"],
         )
 
     def forward(self, inputs):
-        inputs = self.backbone(inputs)
-        outputs = self.classification_head(inputs.flatten())
+        outputs = self.backbone(inputs)
+        #outputs = self.classification_head(inputs)
 
         return outputs

@@ -5,10 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: Training",
             "type": "python",
             "request": "launch",
             "program": "scripts/train.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-c",
+                "configuration/pretraining/geolife_base.yaml"
+            ]
+        },
+        {
+            "name": "Python: Compute mean and std",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/compute_dataset_mean.py",
             "console": "integratedTerminal",
             "args": [
                 "-c",

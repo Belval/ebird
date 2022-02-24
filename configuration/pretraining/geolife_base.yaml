@@ -1,26 +1,28 @@
 DATASET:
   TRAIN:
     TYPE: GeoLifeCLEFDataset
-    ANNOTATION_PATH: /mnt/network_nvme/GeoLifeCLEF/annotation_train.json
-    IMAGE_PATH: /mnt/network_nvme/GeoLifeCLEF/
+    ANNOTATION_PATH: /mnt/network_nvme/GeoLifeCLEF/annotations/annotations_train.json
+    IMAGE_PATH: /mnt/network_nvme/GeoLifeCLEF/images/
   VALIDATION:
     TYPE: GeoLifeCLEFDataset
-    ANNOTATION_PATH: /mnt/network_nvme/GeoLifeCLEF/annotation_val.json
-    IMAGE_PATH: /mnt/network_nvme/GeoLifeCLEF/
+    ANNOTATION_PATH: /mnt/network_nvme/GeoLifeCLEF/annotations/annotations_val.json
+    IMAGE_PATH: /mnt/network_nvme/GeoLifeCLEF/images/
 MODEL:
   BACKBONE:
     CLASS: resnet50
     PRETRAINED: False
+    # Important: If this != 3, we will delete the first layer of the network
+    INPUT_CHANNELS: 6
   CLASSIFICATION_HEAD:
-    INPUT_FEATURES: 128
-    OUTPUT_FEATURES: 64
+    INPUT_FEATURES: 2048
+    OUTPUT_FEATURES: 31435
 TRAINING:
   EPOCHS: 5
-  BATCH_SIZE: 12
+  BATCH_SIZE: 36
   OPTIMIZER:
     LEARNING_RATE: 0.0001
-  CHECKPOINT_INTERVAL: 1000
-  EVALUATION_INTERVAL: 1000
-  LOGGING_INTERVAL: 50
+  CHECKPOINT_INTERVAL: 5000
+  EVALUATION_INTERVAL: 5000
+  LOGGING_INTERVAL: 5
 RESUME: 
 OUTPUT_DIR: /mnt/network_nvme/experiments/
