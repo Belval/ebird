@@ -12,12 +12,12 @@ MODEL:
     CLASS: resnet50
     PRETRAINED: False
     # Important: If this != 3, we will delete the first layer of the network
-    INPUT_CHANNELS: 6
+    INPUT_CHANNELS: 4
   CLASSIFICATION_HEAD:
     INPUT_FEATURES: 2048
     OUTPUT_FEATURES: 31435
 TRAINING:
-  EPOCHS: 5
+  EPOCHS: 50
   BATCH_SIZE: 36
   OPTIMIZER:
     LEARNING_RATE: 0.0001

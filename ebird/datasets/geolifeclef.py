@@ -31,10 +31,10 @@ class GeoLifeCLEFDataset(Dataset):
 
     def __getitem__(self, idx):
         img_fn, img_alti_fn, gt = self.samples[idx]
-        img = np.load(img_fn)
-        img_alti = np.load(img_alti_fn)
+        img = np.load(img_fn)[:, :, 0:4]
+        #img_alti = np.load(img_alti_fn)
 
-        img = np.concatenate([img, img_alti[:, :, np.newaxis]], axis=-1)
+        #img = np.concatenate([img, img_alti[:, :, np.newaxis]], axis=-1)
 
         #img = np.moveaxis(img, -1, 0)
 

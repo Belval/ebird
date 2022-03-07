@@ -1,0 +1,28 @@
+DATASET:
+  TRAIN:
+    TYPE: EBirdDataset
+    BASE_PATH: /mnt/network_nvme/ebird_data/
+    SPLIT_FILE: train.txt
+  VALIDATION:
+    TYPE: EBirdDataset
+    BASE_PATH: /mnt/network_nvme/ebird_data/
+    SPLIT_FILE: valid.txt
+MODEL:
+  BACKBONE:
+    CLASS: resnet50
+    PRETRAINED: False
+    # Important: If this != 3, we will delete the first layer of the network
+    INPUT_CHANNELS: 4
+  CLASSIFICATION_HEAD:
+    INPUT_FEATURES: 2048
+    OUTPUT_FEATURES: 31435
+TRAINING:
+  EPOCHS: 5
+  BATCH_SIZE: 36
+  OPTIMIZER:
+    LEARNING_RATE: 0.0001
+  CHECKPOINT_INTERVAL: 5000
+  EVALUATION_INTERVAL: 5000
+  LOGGING_INTERVAL: 5
+RESUME: 
+OUTPUT_DIR: /mnt/network_nvme/experiments/

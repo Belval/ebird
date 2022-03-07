@@ -23,6 +23,17 @@
             ]
         },
         {
+            "name": "Python: Training eBird",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/train.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-c",
+                "configuration/ebird/ebird_base.yaml"
+            ]
+        },
+        {
             "name": "Python: Compute mean and std",
             "type": "python",
             "request": "launch",

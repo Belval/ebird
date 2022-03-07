@@ -69,7 +69,7 @@ def run_one_epoch(
             )
 
         if is_train and i % config["CHECKPOINT_INTERVAL"] == 0 and i != 0:
-            checkpoint_callback(model, epoch, i)
+            checkpoint_callback(model, optimizer, epoch, i, loss)
 
         writer.add_scalar(f"{'train' if is_train else 'eval'}/loss", loss.item(), iteration + i)
         writer.add_scalar(f"{'train' if is_train else 'eval'}/accuracy", accuracy, iteration + i)
@@ -90,8 +90,8 @@ def main(config):
     transform = torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize(
-            mean=[111.9393, 121.3099, 113.0863, 140.8277,  24.5900, 318.8939],
-            std=[ 51.5302,  45.5618,  41.4096,  54.2996,   4.3272, 495.6868],
+            mean=[111.9393, 121.3099, 113.0863, 140.8277],
+            std=[51.5302,  45.5618,  41.4096,  54.2996],
         ),
         torchvision.transforms.ConvertImageDtype(torch.float),
     ])
@@ -100,19 +100,28 @@ def main(config):
         build_dataset(config["DATASET"]["TRAIN"], transform=transform),
         batch_size=config["TRAINING"]["BATCH_SIZE"],
         shuffle=True,
-        num_workers=16
+        num_workers=0
     )
     validation_dataloader = torch.utils.data.DataLoader(
         build_dataset(config["DATASET"]["VALIDATION"], transform=transform),
         batch_size=config["TRAINING"]["BATCH_SIZE"],
-        num_workers=16
+        num_workers=0
     )
 
     iteration = 0
-    for epoch in range(config["TRAINING"]["EPOCHS"]):
+    epoch = 0
+
+    if "RESUME" in config and config["RESUME"]:
+        checkpoint = torch.load(config["RESUME"])
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        epoch = checkpoint["epoch"]
+        iteration = checkpoint["iteration"]
+
+    for current_epoch in range(epoch, config["TRAINING"]["EPOCHS"]):
         iteration = run_one_epoch(
             config["TRAINING"],
-            epoch,
+            current_epoch,
             model,
             optimizer,
             train_dataloader,
