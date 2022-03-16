@@ -18,11 +18,15 @@ MODEL:
     OUTPUT_FEATURES: 31435
 TRAINING:
   EPOCHS: 50
-  BATCH_SIZE: 36
+  BATCH_SIZE: 30
   OPTIMIZER:
     LEARNING_RATE: 0.0001
   CHECKPOINT_INTERVAL: 5000
   EVALUATION_INTERVAL: 5000
   LOGGING_INTERVAL: 5
-RESUME: 
+  LOSS: CrossEntropyLoss
+#RESUME: /mnt/network_nvme/experiments/1646543131.171695/checkpoint_9_25000.pth
+#RESUME: /mnt/network_nvme/experiments/1646803395.5704546/checkpoint_14_5000.pth
+#RESUME: /mnt/network_nvme/experiments/1646846855.9141076/checkpoint_16_5000.pth
+RESUME: /mnt/network_nvme/experiments/1646888626.7125351/checkpoint_24_5000.pth
 OUTPUT_DIR: /mnt/network_nvme/experiments/

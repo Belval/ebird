@@ -37,7 +37,15 @@ def run_one_epoch(
         outputs = model(inputs.to(device))
 
         loss = criterion(outputs, targets.to(device))
-        accuracy = torch.sum(outputs.argmax(axis=1).detach().cpu() == targets) / config["BATCH_SIZE"]
+        if len(targets.shape) == 1:
+            accuracy = torch.sum(
+                outputs.argmax(axis=1).detach().cpu() == targets
+            ) / config["BATCH_SIZE"]
+        else:
+            accuracy = torch.sum(
+                (torch.nn.functional.sigmoid(outputs.detach().cpu()) > 0.5) == targets
+            ) / (config["BATCH_SIZE"] * targets.shape[1])
+
         running_loss += loss.item()
         running_accuracy += accuracy
 
@@ -85,7 +93,11 @@ def main(config):
 
     model = Model(config["MODEL"]).to(device)
     optimizer = Adam(model.parameters(), lr=config["TRAINING"]["OPTIMIZER"]["LEARNING_RATE"])
-    criterion = torch.nn.CrossEntropyLoss()
+
+    if config["TRAINING"]["LOSS"] == "CrossEntropyLoss":
+        criterion = torch.nn.CrossEntropyLoss()
+    else:
+        criterion = torch.nn.BCEWithLogitsLoss()
 
     transform = torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),
@@ -100,12 +112,12 @@ def main(config):
         build_dataset(config["DATASET"]["TRAIN"], transform=transform),
         batch_size=config["TRAINING"]["BATCH_SIZE"],
         shuffle=True,
-        num_workers=0
+        num_workers=16
     )
     validation_dataloader = torch.utils.data.DataLoader(
         build_dataset(config["DATASET"]["VALIDATION"], transform=transform),
         batch_size=config["TRAINING"]["BATCH_SIZE"],
-        num_workers=0
+        num_workers=16
     )
 
     iteration = 0
@@ -113,10 +125,15 @@ def main(config):
 
     if "RESUME" in config and config["RESUME"]:
         checkpoint = torch.load(config["RESUME"])
-        model.load_state_dict(checkpoint["model_state_dict"])
-        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        epoch = checkpoint["epoch"]
-        iteration = checkpoint["iteration"]
+        new_state_dict = {
+            k:(v if v.size() == model.state_dict()[k].size() else model.state_dict()[k])
+            for k, v in zip(model.state_dict().keys(), checkpoint["model_state_dict"].values())
+        }
+        model.load_state_dict(new_state_dict, strict=False)
+        if not config["RESET_TRAINING"]:
+            optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+            epoch = checkpoint["epoch"]
+            iteration = checkpoint["iteration"]
 
     for current_epoch in range(epoch, config["TRAINING"]["EPOCHS"]):
         iteration = run_one_epoch(
