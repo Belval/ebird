@@ -21,15 +21,20 @@ class EBirdDataset(Dataset):
         self.transform = transform
 
         self.samples = []
+        skipped_samples = 0
         for sample in self.samples_filename:
+            if self.hotspot_info[self.hotspot_info["hotspot_id"] == sample[:-4]].empty:
+                skipped_samples += 1
+                continue
             self.samples.append({
                 "r": os.path.join(self.base_path, "r", sample),
                 "g": os.path.join(self.base_path, "g", sample),
                 "b": os.path.join(self.base_path, "b", sample),
                 "nir": os.path.join(self.base_path, "nir", sample),
-                "hotspot": self.hotspot_info[self.hotspot_info["hotspot_id"] == "L8838283"],
+                "hotspot": self.hotspot_info[self.hotspot_info["hotspot_id"] == sample[:-4]],
                 "label": os.path.join(self.base_path, "labels", sample),
             })
+        print(f"{skipped_samples} samples were skipped")
 
     def __len__(self):
         return len(self.samples)
@@ -50,17 +55,17 @@ class EBirdDataset(Dataset):
         features = []
 
         state_one_hot = np.zeros((len(STATE_CODE),))
-        state_one_hot[STATE_CODE.index(hotspot["state_code"][0])] = 1.0
+        state_one_hot[STATE_CODE.index(hotspot["state_code"].iloc[0])] = 1.0
         features.append(state_one_hot)
 
         lon_lat = np.zeros((2,))
-        lon_lat[0] = hotspot["lon"][0]
-        lon_lat[1] = hotspot["lat"][0]
+        lon_lat[0] = hotspot["lon"].iloc[0]
+        lon_lat[1] = hotspot["lat"].iloc[0]
         features.append(lon_lat)
 
         other_features = np.zeros((len(EBIRD_KEYS),))
         for i, k in enumerate(EBIRD_KEYS):
-            other_features[i] = hotspot[k][0]
+            other_features[i] = hotspot[k].iloc[0]
         features.append(other_features)
 
         feature_vector = np.concatenate(features)
