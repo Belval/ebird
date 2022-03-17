@@ -33,8 +33,8 @@ def run_one_epoch(
 
     running_loss = 0
     running_accuracy = 0
-    for i, (inputs, targets) in enumerate(train_dataloader if is_train else validation_dataloader):
-        outputs = model(inputs.to(device))
+    for i, (input_images, input_features, targets) in enumerate(train_dataloader if is_train else validation_dataloader):
+        outputs = model(input_images.to(device), input_features.to(device))
 
         loss = criterion(outputs, targets.to(device))
         if len(targets.shape) == 1:
@@ -99,14 +99,24 @@ def main(config):
     else:
         criterion = torch.nn.BCEWithLogitsLoss()
 
-    transform = torchvision.transforms.Compose([
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize(
-            mean=[111.9393, 121.3099, 113.0863, 140.8277],
-            std=[51.5302,  45.5618,  41.4096,  54.2996],
-        ),
-        torchvision.transforms.ConvertImageDtype(torch.float),
-    ])
+    if config["DATASET"]["TRAIN"]["TYPE"] == "GeoLifeCLEFDataset":
+        transform = torchvision.transforms.Compose([
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize(
+                mean=[111.9393, 121.3099, 113.0863, 140.8277],
+                std=[51.5302,  45.5618,  41.4096,  54.2996],
+            ),
+            torchvision.transforms.ConvertImageDtype(torch.float),
+        ])
+    else:
+        transform = torchvision.transforms.Compose([
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize(
+                mean=[887.4186,  929.5382,  688.8167, 2818.0081],
+                std=[873.2404,  734.9333,  734.1111, 1351.0328],
+            ),
+            torchvision.transforms.ConvertImageDtype(torch.float),
+        ])
 
     train_dataloader = torch.utils.data.DataLoader(
         build_dataset(config["DATASET"]["TRAIN"], transform=transform),
@@ -130,7 +140,7 @@ def main(config):
             for k, v in zip(model.state_dict().keys(), checkpoint["model_state_dict"].values())
         }
         model.load_state_dict(new_state_dict, strict=False)
-        if not config["RESET_TRAINING"]:
+        if not config.get("RESET_TRAINING", False):
             optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
             epoch = checkpoint["epoch"]
             iteration = checkpoint["iteration"]

@@ -43,4 +43,4 @@ class GeoLifeCLEFDataset(Dataset):
         if self.transform is not None:
             img = self.transform(img)
 
-        return img, gt
+        return img, np.zeros((0,)), gt

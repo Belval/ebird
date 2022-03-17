@@ -14,18 +14,20 @@ MODEL:
     # Important: If this != 3, we will delete the first layer of the network
     INPUT_CHANNELS: 4
   CLASSIFICATION_HEAD:
-    INPUT_FEATURES: 2048
+    TYPE: mlp
+    INPUT_FEATURES: 2127
     OUTPUT_FEATURES: 684
+  
 TRAINING:
   EPOCHS: 5
   BATCH_SIZE: 36
   OPTIMIZER:
-    LEARNING_RATE: 0.0001
+    LEARNING_RATE: 0.00005
   CHECKPOINT_INTERVAL: 5000
   EVALUATION_INTERVAL: 5000
   LOGGING_INTERVAL: 5
   LOSS: BCELoss
 # GeoLifeCLEF pretraining
-RESUME: /mnt/network_nvme/experiments/1646976471.5896497/checkpoint_33_5000.pth
+RESUME: /mnt/network_nvme/experiments/1646976471.5896497/checkpoint_33_10000.pth
 RESET_TRAINING: True
 OUTPUT_DIR: /mnt/network_nvme/experiments/

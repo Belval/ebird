@@ -6,6 +6,8 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 
+from ebird.utils.constants import STATE_CODE, EBIRD_KEYS
+
 class EBirdDataset(Dataset):
     def __init__(self, config, transform=None):
         self.base_path = config["BASE_PATH"]
@@ -25,7 +27,7 @@ class EBirdDataset(Dataset):
                 "g": os.path.join(self.base_path, "g", sample),
                 "b": os.path.join(self.base_path, "b", sample),
                 "nir": os.path.join(self.base_path, "nir", sample),
-                "hotspot": self.hotspot_info[self.hotspot_info["hotspot_id"] == sample],
+                "hotspot": self.hotspot_info[self.hotspot_info["hotspot_id"] == "L8838283"],
                 "label": os.path.join(self.base_path, "labels", sample),
             })
 
@@ -45,6 +47,24 @@ class EBirdDataset(Dataset):
         startx = r.shape[2] // 2 - (256 // 2)
         starty = r.shape[1] // 2 - (256 // 2)
 
+        features = []
+
+        state_one_hot = np.zeros((len(STATE_CODE),))
+        state_one_hot[STATE_CODE.index(hotspot["state_code"][0])] = 1.0
+        features.append(state_one_hot)
+
+        lon_lat = np.zeros((2,))
+        lon_lat[0] = hotspot["lon"][0]
+        lon_lat[1] = hotspot["lat"][0]
+        features.append(lon_lat)
+
+        other_features = np.zeros((len(EBIRD_KEYS),))
+        for i, k in enumerate(EBIRD_KEYS):
+            other_features[i] = hotspot[k][0]
+        features.append(other_features)
+
+        feature_vector = np.concatenate(features)
+
         img = np.moveaxis(np.concatenate([
             r[:, starty:starty+256, startx:startx+256],
             g[:, starty:starty+256, startx:startx+256],
@@ -55,4 +75,4 @@ class EBirdDataset(Dataset):
         if self.transform is not None:
             img = self.transform(img)
 
-        return img, label
+        return img, feature_vector, label

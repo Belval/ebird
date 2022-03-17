@@ -14,6 +14,7 @@ MODEL:
     # Important: If this != 3, we will delete the first layer of the network
     INPUT_CHANNELS: 4
   CLASSIFICATION_HEAD:
+    TYPE: simple
     INPUT_FEATURES: 2048
     OUTPUT_FEATURES: 31435
 TRAINING:
