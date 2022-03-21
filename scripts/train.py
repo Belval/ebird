@@ -4,9 +4,12 @@ import sys
 import os
 import time
 import torch
+import numpy as np
 from torch.optim import Adam
 from torch.utils.tensorboard import SummaryWriter
 import torchvision
+
+from sklearn.metrics import top_k_accuracy_score, f1_score
 
 from ebird.model.model import Model
 from ebird.model.checkpointer import Checkpointer
@@ -33,17 +36,28 @@ def run_one_epoch(
 
     running_loss = 0
     running_accuracy = 0
+    outputs_acc = []
+    targets_acc = []
     for i, (input_images, input_features, targets) in enumerate(train_dataloader if is_train else validation_dataloader):
         outputs = model(input_images.to(device), input_features.to(device))
 
-        loss = criterion(outputs, targets.to(device))
+        outputs_acc.append(outputs.detach().cpu())
+        targets_acc.append(targets.detach().cpu())
+
+        if config["BOOST_LOSS"]:
+            loss = criterion(outputs, targets.to(device))
+            loss[targets == 1] *= 10
+            loss = loss.mean()
+        else:
+            loss = criterion(outputs, targets.to(device))
+
         if len(targets.shape) == 1:
             accuracy = torch.sum(
                 outputs.argmax(axis=1).detach().cpu() == targets
             ) / config["BATCH_SIZE"]
         else:
             accuracy = torch.sum(
-                (torch.nn.functional.sigmoid(outputs.detach().cpu()) > 0.5) == targets
+                (torch.sigmoid(outputs.detach().cpu()) > 0.5) == targets
             ) / (config["BATCH_SIZE"] * targets.shape[1])
 
         running_loss += loss.item()
@@ -80,7 +94,98 @@ def run_one_epoch(
             checkpoint_callback(model, optimizer, epoch, i, loss)
 
         writer.add_scalar(f"{'train' if is_train else 'eval'}/loss", loss.item(), iteration + i)
-        writer.add_scalar(f"{'train' if is_train else 'eval'}/accuracy", accuracy, iteration + i)
+        if len(targets.shape) == 1:
+            writer.add_scalar(f"{'train' if is_train else 'eval'}/top_1_accuracy",
+                top_k_accuracy_score(
+                    targets.detach().cpu().numpy(),
+                    torch.nn.functional.softmax(outputs.detach().cpu(), dim=-1).numpy(),
+                    k=1,
+                    labels=[i for i in range(outputs.shape[-1])]),
+                iteration + i
+            )
+            writer.add_scalar(f"{'train' if is_train else 'eval'}/top_5_accuracy",
+                top_k_accuracy_score(
+                    targets.detach().cpu().numpy(),
+                    torch.nn.functional.softmax(outputs.detach().cpu(), dim=-1).numpy(),
+                    k=5,
+                    labels=[i for i in range(outputs.shape[-1])]),
+                iteration + i
+            )
+            writer.add_scalar(f"{'train' if is_train else 'eval'}/top_30_accuracy",
+                top_k_accuracy_score(
+                    targets.detach().cpu().numpy(),
+                    torch.nn.functional.softmax(outputs.detach().cpu(), dim=-1).numpy(),
+                    k=30,
+                    labels=[i for i in range(outputs.shape[-1])]),
+                iteration + i
+            )
+        if len(targets.shape) == 2:
+            writer.add_scalar(f"{'train' if is_train else 'eval'}/f1_score",
+                f1_score(
+                    np.nan_to_num(targets.detach().cpu().numpy()),
+                    (np.nan_to_num(torch.nn.functional.softmax(outputs.detach().cpu(), dim=-1).numpy()) > 0.5),
+                    labels=[i for i in range(outputs.shape[-1])],
+                    average='micro'
+                ),
+                iteration + i
+            )
+
+    if len(targets.shape) == 1:
+        writer.add_scalar(f"{'train' if is_train else 'eval'}/epoch_top_1_accuracy",
+            top_k_accuracy_score(
+                torch.concat(targets_acc).numpy(),
+                torch.nn.functional.softmax(torch.concat(outputs_acc), dim=-1).numpy(),
+                k=1,
+                labels=[i for i in range(outputs.shape[-1])]),
+            iteration + i
+        )
+        writer.add_scalar(f"{'train' if is_train else 'eval'}/epoch_top_5_accuracy",
+            top_k_accuracy_score(
+                torch.concat(targets_acc).numpy(),
+                torch.nn.functional.softmax(torch.concat(outputs_acc), dim=-1).numpy(),
+                k=5,
+                labels=[i for i in range(outputs.shape[-1])]),
+            iteration + i
+        )
+        writer.add_scalar(f"{'train' if is_train else 'eval'}/epoch_top_30_accuracy",
+            top_k_accuracy_score(
+                torch.concat(targets_acc).numpy(),
+                torch.nn.functional.softmax(torch.concat(outputs_acc), dim=-1).numpy(),
+                k=30,
+                labels=[i for i in range(outputs.shape[-1])]),
+            iteration + i
+        )
+    if len(targets.shape) == 2:
+        writer.add_scalar(f"{'train' if is_train else 'eval'}/f1_score",
+            f1_score(
+                np.nan_to_num(torch.concat(targets_acc).numpy()),
+                (np.nan_to_num(torch.nn.functional.softmax(torch.concat(outputs_acc), dim=-1).numpy()) > 0.5),
+                labels=[i for i in range(outputs.shape[-1])],
+                average='micro'
+            ),
+            iteration + i
+        )
+
+    if is_train:
+        checkpoint_callback(model, optimizer, epoch, i, loss)
+
+    if is_train:
+        # FIXME: Recursivity in this context is bad
+        run_one_epoch(
+            config,
+            epoch,
+            model,
+            optimizer,
+            None,
+            validation_dataloader,
+            criterion,
+            writer,
+            None,
+            device,
+            iteration + i,
+            False
+        )
+
     return iteration + i
 
 def main(config):
@@ -97,7 +202,10 @@ def main(config):
     if config["TRAINING"]["LOSS"] == "CrossEntropyLoss":
         criterion = torch.nn.CrossEntropyLoss()
     else:
-        criterion = torch.nn.BCEWithLogitsLoss()
+        if config["TRAINING"]["BOOST_LOSS"]:
+            criterion = torch.nn.BCEWithLogitsLoss(reduction="none")
+        else:
+            criterion = torch.nn.BCEWithLogitsLoss()
 
     if config["DATASET"]["TRAIN"]["TYPE"] == "GeoLifeCLEFDataset":
         transform = torchvision.transforms.Compose([

@@ -68,7 +68,7 @@ class EBirdDataset(Dataset):
             other_features[i] = hotspot[k].iloc[0]
         features.append(other_features)
 
-        feature_vector = np.concatenate(features)
+        feature_vector = np.nan_to_num(np.concatenate(features))
 
         img = np.moveaxis(np.concatenate([
             r[:, starty:starty+256, startx:startx+256],

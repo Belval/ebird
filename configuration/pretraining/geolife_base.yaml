@@ -23,11 +23,12 @@ TRAINING:
   OPTIMIZER:
     LEARNING_RATE: 0.0001
   CHECKPOINT_INTERVAL: 5000
-  EVALUATION_INTERVAL: 5000
+  EVALUATION_INTERVAL: 1
   LOGGING_INTERVAL: 5
   LOSS: CrossEntropyLoss
 #RESUME: /mnt/network_nvme/experiments/1646543131.171695/checkpoint_9_25000.pth
 #RESUME: /mnt/network_nvme/experiments/1646803395.5704546/checkpoint_14_5000.pth
 #RESUME: /mnt/network_nvme/experiments/1646846855.9141076/checkpoint_16_5000.pth
-RESUME: /mnt/network_nvme/experiments/1646888626.7125351/checkpoint_24_5000.pth
+#RESUME: /mnt/network_nvme/experiments/1646888626.7125351/checkpoint_24_5000.pth
+RESUME: /mnt/network_nvme/experiments/1646976471.5896497/checkpoint_33_10000.pth
 OUTPUT_DIR: /mnt/network_nvme/experiments/
