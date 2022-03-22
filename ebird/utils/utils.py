@@ -1,0 +1,13 @@
+import numpy as np
+
+def compute_multilabel_top_k_accuracy(targets, outputs, k=30):
+    top_k = np.argpartition(outputs, -k)[:, -k:]
+    targets_non_zero_sample, targets_non_zero_class = targets.nonzero()
+    good = 0
+    total = 0
+    for i, v in zip(targets_non_zero_sample, targets_non_zero_class):
+        if v in top_k[i]:
+            good += 1
+        total += 1
+    
+    return good / total

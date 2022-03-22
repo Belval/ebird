@@ -23,12 +23,13 @@ TRAINING:
   BATCH_SIZE: 32
   OPTIMIZER:
     LEARNING_RATE: 0.0001
-  CHECKPOINT_INTERVAL: 200
+  CHECKPOINT_INTERVAL: 1000
   EVALUATION_INTERVAL: 1000
   LOGGING_INTERVAL: 5
   LOSS: BCELoss
   BOOST_LOSS: True
 # GeoLifeCLEF pretraining
-RESUME: /mnt/network_nvme/experiments/1646976471.5896497/checkpoint_33_10000.pth
-RESET_TRAINING: True
+#RESUME: #/mnt/network_nvme/experiments/1646976471.5896497/checkpoint_33_10000.pth
+RESUME: /mnt/network_nvme/experiments/1647829471.5460103/checkpoint_99_214.pth #/mnt/network_nvme/experiments/1647826133.4552372/checkpoint_37_200.pth
+RESET_TRAINING: False
 OUTPUT_DIR: /mnt/network_nvme/experiments/

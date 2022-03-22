@@ -14,6 +14,7 @@ from sklearn.metrics import top_k_accuracy_score, f1_score
 from ebird.model.model import Model
 from ebird.model.checkpointer import Checkpointer
 from ebird.datasets import build_dataset
+from ebird.utils.utils import compute_multilabel_top_k_accuracy
 
 def run_one_epoch(
     config,
@@ -129,6 +130,13 @@ def run_one_epoch(
                 ),
                 iteration + i
             )
+            writer.add_scalar(f"{'train' if is_train else 'eval'}/multilabel_top_30_accuracy",
+                compute_multilabel_top_k_accuracy(
+                    targets.detach().cpu().numpy(),
+                    torch.nn.functional.softmax(outputs.detach().cpu(), dim=-1).numpy()
+                ),
+                iteration + i
+            )
 
     if len(targets.shape) == 1:
         writer.add_scalar(f"{'train' if is_train else 'eval'}/epoch_top_1_accuracy",
@@ -162,6 +170,13 @@ def run_one_epoch(
                 (np.nan_to_num(torch.nn.functional.softmax(torch.concat(outputs_acc), dim=-1).numpy()) > 0.5),
                 labels=[i for i in range(outputs.shape[-1])],
                 average='micro'
+            ),
+            iteration + i
+        )
+        writer.add_scalar(f"{'train' if is_train else 'eval'}/multilabel_top_30_accuracy",
+            compute_multilabel_top_k_accuracy(
+                torch.concat(targets_acc).numpy(),
+                torch.concat(outputs_acc).numpy()
             ),
             iteration + i
         )
