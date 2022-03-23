@@ -50,6 +50,17 @@
                 "-c",
                 "configuration/pretraining/geolife_base.yaml"
             ]
+        },
+        {
+            "name": "Python: Plot sightings",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/plot_sighting.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-c",
+                "configuration/ebird/ebird_base.yaml"
+            ]
         }
     ]
 }
