@@ -5,7 +5,7 @@ import os
 import time
 import torch
 import numpy as np
-from torch.optim import Adam
+from torch.optim import Adam, AdamW
 from torch.utils.tensorboard import SummaryWriter
 import torchvision
 
@@ -212,7 +212,13 @@ def main(config):
     device = "cuda"
 
     model = Model(config["MODEL"]).to(device)
-    optimizer = Adam(model.parameters(), lr=config["TRAINING"]["OPTIMIZER"]["LEARNING_RATE"])
+
+    if config["TRAINING"]["OPTIMIZER"]["ALGORITHM"] == "Adam":
+        optimizer = Adam(model.parameters(), lr=config["TRAINING"]["OPTIMIZER"]["LEARNING_RATE"])
+    elif config["TRAINING"]["OPTIMIZER"]["ALGORITHM"] == "AdamW":
+        optimizer = AdamW(model.parameters(), lr=config["TRAINING"]["OPTIMIZER"]["LEARNING_RATE"])
+    else:
+        print("Unknown optimizer algorithm")
 
     if config["TRAINING"]["LOSS"] == "CrossEntropyLoss":
         criterion = torch.nn.CrossEntropyLoss()
@@ -235,8 +241,8 @@ def main(config):
         transform = torchvision.transforms.Compose([
             torchvision.transforms.ToTensor(),
             torchvision.transforms.Normalize(
-                mean=[887.4186,  929.5382,  688.8167, 2818.0081],
-                std=[873.2404,  734.9333,  734.1111, 1351.0328],
+                mean=[890.3597,  929.5649,  690.5411, 2812.1230],
+                std=[884.0230,  748.8593,  750.9115, 1343.0872],
             ),
             torchvision.transforms.ConvertImageDtype(torch.float),
         ])

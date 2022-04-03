@@ -16,6 +16,10 @@ class Model(torch.nn.Module):
                 torch.nn.ReLU(),
                 torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"]),
                 torch.nn.ReLU(),
+                torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"]),
+                torch.nn.ReLU(),
+                torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"]),
+                torch.nn.ReLU(),
                 torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["OUTPUT_FEATURES"])
             )
         else:

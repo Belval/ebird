@@ -48,7 +48,7 @@
             "console": "integratedTerminal",
             "args": [
                 "-c",
-                "configuration/pretraining/geolife_base.yaml"
+                "configuration/ebird/ebird_base.yaml"
             ]
         },
         {

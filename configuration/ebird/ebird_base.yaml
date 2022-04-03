@@ -2,11 +2,13 @@ DATASET:
   TRAIN:
     TYPE: EBirdDataset
     BASE_PATH: /mnt/network_nvme/ebird_data/
-    SPLIT_FILE: train.txt
+    SPLIT_FILE: train_june.txt
+    RESOLUTION: 256
   VALIDATION:
     TYPE: EBirdDataset
     BASE_PATH: /mnt/network_nvme/ebird_data/
-    SPLIT_FILE: valid.txt
+    SPLIT_FILE: val_june.txt
+    RESOLUTION: 256
 MODEL:
   BACKBONE:
     CLASS: resnet50
@@ -19,17 +21,18 @@ MODEL:
     OUTPUT_FEATURES: 684
   
 TRAINING:
-  EPOCHS: 500
-  BATCH_SIZE: 32
+  EPOCHS: 50
+  BATCH_SIZE: 6
   OPTIMIZER:
+    ALGORITHM: AdamW
     LEARNING_RATE: 0.0001
   CHECKPOINT_INTERVAL: 1000
   EVALUATION_INTERVAL: 1000
-  LOGGING_INTERVAL: 5
+  LOGGING_INTERVAL: 500
   LOSS: BCELoss
   BOOST_LOSS: True
 # GeoLifeCLEF pretraining
 #RESUME: #/mnt/network_nvme/experiments/1646976471.5896497/checkpoint_33_10000.pth
-RESUME: /mnt/network_nvme/experiments/1647829471.5460103/checkpoint_99_214.pth #/mnt/network_nvme/experiments/1647826133.4552372/checkpoint_37_200.pth
+RESUME: #/mnt/network_nvme/experiments/1647829471.5460103/checkpoint_99_214.pth #/mnt/network_nvme/experiments/1647826133.4552372/checkpoint_37_200.pth
 RESET_TRAINING: False
 OUTPUT_DIR: /mnt/network_nvme/experiments/
