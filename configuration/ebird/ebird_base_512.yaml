@@ -3,12 +3,12 @@ DATASET:
     TYPE: EBirdDataset
     BASE_PATH: /mnt/network_nvme/ebird_data/
     SPLIT_FILE: train_june.txt
-    RESOLUTION: 256
+    RESOLUTION: 512
   VALIDATION:
     TYPE: EBirdDataset
     BASE_PATH: /mnt/network_nvme/ebird_data/
     SPLIT_FILE: test_june.txt
-    RESOLUTION: 256
+    RESOLUTION: 512
 MODEL:
   BACKBONE:
     CLASS: resnet50

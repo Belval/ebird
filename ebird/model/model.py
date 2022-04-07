@@ -10,29 +10,26 @@ class Model(torch.nn.Module):
         self.backbone = get_backbone(config["BACKBONE"])
 
         if config["CLASSIFICATION_HEAD"]["TYPE"] == "mlp":
-            self.backbone.fc = torch.nn.Linear(2048, 2048)
-            self.classification_head = torch.nn.Sequential(
-                torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"]),
-                torch.nn.ReLU(),
-                torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"]),
-                torch.nn.ReLU(),
-                torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"]),
-                torch.nn.ReLU(),
-                torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"]),
-                torch.nn.ReLU(),
-                torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["OUTPUT_FEATURES"])
+            self.backbone.fc = torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"] - 80, config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"] - 80)
+            self.fc = torch.nn.Sequential(
+                *([
+                    torch.nn.Sequential(
+                        torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"]),
+                        torch.nn.ReLU()
+                    )
+                    for _ in range(config["CLASSIFICATION_HEAD"].get("LAYER_COUNT", 5) - 1)
+                ])
             )
+            self.label_prediction = torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], config["CLASSIFICATION_HEAD"]["OUTPUT_FEATURES"])
+            self.label_count = torch.nn.Linear(config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"], 1)
         else:
-            self.classification_head = None
-            self.backbone.fc = torch.nn.Linear(
-                config["CLASSIFICATION_HEAD"]["INPUT_FEATURES"],
-                config["CLASSIFICATION_HEAD"]["OUTPUT_FEATURES"],
-            )
+            raise NotImplementedError()
 
     def forward(self, input_images, input_features):
         outputs = self.backbone(input_images)
 
-        if self.classification_head is not None:
-            outputs = self.classification_head(torch.hstack((outputs, input_features)).to(torch.float32))
+        outputs = self.fc(torch.hstack((outputs, input_features)).to(torch.float32))
+        labels = self.label_prediction(outputs)
+        label_count = self.label_count(outputs)
 
-        return outputs
+        return labels, label_count

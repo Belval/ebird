@@ -11,18 +11,18 @@ DATASET:
     RESOLUTION: 256
 MODEL:
   BACKBONE:
-    CLASS: resnet50
+    CLASS: resnet18
     PRETRAINED: False
     # Important: If this != 3, we will delete the first layer of the network
     INPUT_CHANNELS: 4
   CLASSIFICATION_HEAD:
     TYPE: mlp
-    INPUT_FEATURES: 2128
+    INPUT_FEATURES: 592
     OUTPUT_FEATURES: 684
   
 TRAINING:
-  EPOCHS: 50
-  BATCH_SIZE: 6
+  EPOCHS: 100
+  BATCH_SIZE: 128
   OPTIMIZER:
     ALGORITHM: AdamW
     LEARNING_RATE: 0.0001
@@ -33,6 +33,6 @@ TRAINING:
   BOOST_LOSS: True
 # GeoLifeCLEF pretraining
 #RESUME: #/mnt/network_nvme/experiments/1646976471.5896497/checkpoint_33_10000.pth
-RESUME: /mnt/network_nvme/experiments/1648956953.2008972/checkpoint_49_1282.pth #/mnt/network_nvme/experiments/256_5_layers/checkpoint_49_1282.pth
+RESUME: /mnt/network_nvme/experiments/1649027953.8546581/checkpoint_49_1282.pth
 RESET_TRAINING: False
 OUTPUT_DIR: /mnt/network_nvme/experiments/

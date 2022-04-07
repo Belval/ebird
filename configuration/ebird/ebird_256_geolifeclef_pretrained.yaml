@@ -12,11 +12,12 @@ DATASET:
 MODEL:
   BACKBONE:
     CLASS: resnet50
-    PRETRAINED: False
+    PRETRAINED: True
     # Important: If this != 3, we will delete the first layer of the network
     INPUT_CHANNELS: 4
   CLASSIFICATION_HEAD:
     TYPE: mlp
+    LAYER_COUNT: 5
     INPUT_FEATURES: 2128
     OUTPUT_FEATURES: 684
   
@@ -33,6 +34,6 @@ TRAINING:
   BOOST_LOSS: True
 # GeoLifeCLEF pretraining
 #RESUME: #/mnt/network_nvme/experiments/1646976471.5896497/checkpoint_33_10000.pth
-RESUME: /mnt/network_nvme/experiments/1648956953.2008972/checkpoint_49_1282.pth #/mnt/network_nvme/experiments/256_5_layers/checkpoint_49_1282.pth
-RESET_TRAINING: False
+RESUME: /mnt/network_nvme/experiments/1649018704.328519/checkpoint_49_1282.pth #/mnt/network_nvme/experiments/geolifeclef_pretraining/checkpoint_33_10000.pth
+RESET_TRAINING: True
 OUTPUT_DIR: /mnt/network_nvme/experiments/

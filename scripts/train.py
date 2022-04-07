@@ -4,6 +4,7 @@ import sys
 import os
 import time
 import torch
+import shutil
 import numpy as np
 from torch.optim import Adam, AdamW
 from torch.utils.tensorboard import SummaryWriter
@@ -39,10 +40,12 @@ def run_one_epoch(
     running_accuracy = 0
     outputs_acc = []
     targets_acc = []
+    label_count_acc = []
     for i, (input_images, input_features, targets) in enumerate(train_dataloader if is_train else validation_dataloader):
-        outputs = model(input_images.to(device), input_features.to(device))
+        outputs, label_count = model(input_images.to(device), input_features.to(device))
 
         outputs_acc.append(outputs.detach().cpu())
+        label_count_acc.append(label_count.detach().cpu())
         targets_acc.append(targets.detach().cpu())
 
         if config["BOOST_LOSS"]:
@@ -51,6 +54,9 @@ def run_one_epoch(
             loss = loss.mean()
         else:
             loss = criterion(outputs, targets.to(device))
+
+        if label_count is not None:
+            loss += 0.001 * torch.nn.functional.l1_loss(label_count.squeeze(), targets.to(device).sum(dim=-1).squeeze())
 
         if len(targets.shape) == 1:
             accuracy = torch.sum(
@@ -138,6 +144,7 @@ def run_one_epoch(
                 iteration + i
             )
 
+
     if len(targets.shape) == 1:
         writer.add_scalar(f"{'train' if is_train else 'eval'}/epoch_top_1_accuracy",
             top_k_accuracy_score(
@@ -180,6 +187,10 @@ def run_one_epoch(
             ),
             iteration + i
         )
+        writer.add_scalar(f"{'train' if is_train else 'eval'}/label_count_average_absolute_error",
+            torch.mean(torch.abs(torch.cat(label_count_acc, dim=0).squeeze() - torch.cat(targets_acc, dim=0).sum(dim=-1))),
+            iteration + i
+        )
 
     if is_train:
         checkpoint_callback(model, optimizer, epoch, i, loss)
@@ -203,9 +214,16 @@ def run_one_epoch(
 
     return iteration + i
 
-def main(config):
-    output_path = os.path.join(config["OUTPUT_DIR"], str(time.time()))
+def main(config_path):
+    with open(config_path, "r") as conf:
+        try:
+            config = yaml.safe_load(conf)
+        except yaml.YAMLError as ex:
+            print(ex)
+            sys.exit()
+    output_path = os.path.join(config["OUTPUT_DIR"], os.path.basename(config_path), str(time.time()))
     os.makedirs(output_path)
+    shutil.copyfile(config_path, os.path.join(output_path, "config.yaml"))
     writer = SummaryWriter(log_dir=output_path)
     checkpointer = Checkpointer(output_path)
 
@@ -238,7 +256,18 @@ def main(config):
             torchvision.transforms.ConvertImageDtype(torch.float),
         ])
     else:
-        transform = torchvision.transforms.Compose([
+        train_transform = torchvision.transforms.Compose([
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize(
+                mean=[890.3597,  929.5649,  690.5411, 2812.1230],
+                std=[884.0230,  748.8593,  750.9115, 1343.0872],
+            ),
+            torchvision.transforms.RandomVerticalFlip(p=0.5),
+            torchvision.transforms.RandomHorizontalFlip(p=0.5),
+            torchvision.transforms.RandomRotation(degrees=(0, 360)),
+            torchvision.transforms.ConvertImageDtype(torch.float),
+        ])
+        valid_transform = torchvision.transforms.Compose([
             torchvision.transforms.ToTensor(),
             torchvision.transforms.Normalize(
                 mean=[890.3597,  929.5649,  690.5411, 2812.1230],
@@ -248,13 +277,13 @@ def main(config):
         ])
 
     train_dataloader = torch.utils.data.DataLoader(
-        build_dataset(config["DATASET"]["TRAIN"], transform=transform),
+        build_dataset(config["DATASET"]["TRAIN"], transform=train_transform),
         batch_size=config["TRAINING"]["BATCH_SIZE"],
         shuffle=True,
         num_workers=16
     )
     validation_dataloader = torch.utils.data.DataLoader(
-        build_dataset(config["DATASET"]["VALIDATION"], transform=transform),
+        build_dataset(config["DATASET"]["VALIDATION"], transform=valid_transform),
         batch_size=config["TRAINING"]["BATCH_SIZE"],
         num_workers=16
     )
@@ -294,10 +323,4 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser("eBird training script")
     parser.add_argument("-c", "--configuration", type=str, nargs="?", help="Path to your configuration file", required=True)
     args = parser.parse_args()
-    with open(args.configuration, "r") as conf:
-        try:
-            config = yaml.safe_load(conf)
-        except yaml.YAMLError as ex:
-            print(ex)
-            sys.exit()
-    main(config)
+    main(args.configuration)
