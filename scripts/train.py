@@ -56,7 +56,7 @@ def run_one_epoch(
             loss = criterion(outputs, targets.to(device))
 
         if label_count is not None:
-            loss += 0.001 * torch.nn.functional.l1_loss(label_count.squeeze(), targets.to(device).sum(dim=-1).squeeze())
+            loss += 0.001 * torch.nn.functional.mse_loss(label_count.squeeze(), targets.to(device).sum(dim=-1).squeeze())
 
         if len(targets.shape) == 1:
             accuracy = torch.sum(
@@ -230,6 +230,8 @@ def main(config_path):
     device = "cuda"
 
     model = Model(config["MODEL"]).to(device)
+
+    print(f"Parameter count: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
 
     if config["TRAINING"]["OPTIMIZER"]["ALGORITHM"] == "Adam":
         optimizer = Adam(model.parameters(), lr=config["TRAINING"]["OPTIMIZER"]["LEARNING_RATE"])

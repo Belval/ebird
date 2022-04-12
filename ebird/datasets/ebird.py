@@ -51,6 +51,8 @@ class EBirdDataset(Dataset):
         self.split_file_path = os.path.join(config["BASE_PATH"], config["SPLIT_FILE"])
         self.resolution = config["RESOLUTION"]
 
+        self.config = config
+
         with open(self.split_file_path, "r") as fh:
            self.samples_filename = [f.strip() for f in fh.readlines()]
 
@@ -75,6 +77,7 @@ class EBirdDataset(Dataset):
                 "label": os.path.join(self.base_path, "labels", sample),
             })
         print(f"{skipped_samples} samples were skipped")
+        print(f"{len(self.samples)} samples available")
 
     def __len__(self):
         return len(self.samples)

@@ -7,24 +7,24 @@ DATASET:
   VALIDATION:
     TYPE: EBirdDataset
     BASE_PATH: ./ebird_data/
-    SPLIT_FILE: val_june.txt
+    SPLIT_FILE: test_june.txt
     RESOLUTION: 256
 MODEL:
   BACKBONE:
-    CLASS: resnet18
+    CLASS: resnet50
     PRETRAINED: False
     # Important: If this != 3, we will delete the first layer of the network
     INPUT_CHANNELS: 4
   CLASSIFICATION_HEAD:
     TYPE: mlp
     LAYER_COUNT: 3
-    INPUT_FEATURES: 592
+    INPUT_FEATURES: 2128
     OUTPUT_FEATURES: 684
     PREDICT_LABEL_COUNT: True
   
 TRAINING:
   EPOCHS: 500
-  BATCH_SIZE: 128
+  BATCH_SIZE: 36
   OPTIMIZER:
     ALGORITHM: AdamW
     LEARNING_RATE: 0.0001
