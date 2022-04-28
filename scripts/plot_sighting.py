@@ -16,6 +16,7 @@ from geopandas import GeoDataFrame
 from ebird.model.model import Model
 from ebird.model.checkpointer import Checkpointer
 from ebird.datasets import build_dataset
+from ebird.datasets.ebird import MEAN_FEATURES, STD_FEATURES
 from ebird.utils.constants import STATE_CODE, EBIRD_KEYS
 
 def main(config):
@@ -62,13 +63,24 @@ def main(config):
 
     geometry_gt = {}
     geometry_predicted = {}
-    for i, (input_images, input_features, targets) in enumerate(val_dataloader):
-        outputs = model(input_images.to(device), input_features.to(device))
-        for j, v in enumerate(torch.argmax(targets, dim=-1).numpy().tolist()):
-            geometry_gt[v] = geometry_gt.get(v, []) + [Point(*input_features[j][len(STATE_CODE):len(STATE_CODE)+2])]
-        for j, preds in enumerate(np.argpartition(outputs.detach().cpu().numpy(), -5)[:, -5:]):
-            for v in preds:
-                geometry_predicted[v] = geometry_predicted.get(v, []) + [Point(*input_features[j][len(STATE_CODE):len(STATE_CODE)+2])]
+    for i, (input_images, input_features, targets, filename) in enumerate(val_dataloader):
+        outputs, _ = model(input_images.to(device), input_features.to(device))
+        for j, v in torch.nonzero(targets).numpy().tolist():
+            geometry_gt[v] = geometry_gt.get(v, []) + [Point(
+                    input_features[j][len(STATE_CODE)] * STD_FEATURES[len(STATE_CODE)] + MEAN_FEATURES[len(STATE_CODE)],
+                    input_features[j][len(STATE_CODE) + 1] * STD_FEATURES[len(STATE_CODE) + 1] + MEAN_FEATURES[len(STATE_CODE) + 1],
+                )]
+        
+        for j, v in torch.nonzero(outputs > 0.5).detach().cpu().numpy().tolist():
+            if v == 36:
+                if targets[j, v]:
+                    print(f"Good: {filename[j]}")
+                else:
+                    print(f"Bad: {filename[j]}")
+            geometry_predicted[v] = geometry_predicted.get(v, []) + [Point(
+                input_features[j][len(STATE_CODE)] * STD_FEATURES[len(STATE_CODE)] + MEAN_FEATURES[len(STATE_CODE)],
+                input_features[j][len(STATE_CODE) + 1] * STD_FEATURES[len(STATE_CODE) + 1] + MEAN_FEATURES[len(STATE_CODE) + 1],
+            )]
 
     for i in range(config["MODEL"]["CLASSIFICATION_HEAD"]["OUTPUT_FEATURES"]):
         if i not in geometry_gt or i not in geometry_predicted:
@@ -77,17 +89,21 @@ def main(config):
         df = pd.DataFrame()
         gdf = GeoDataFrame(df, geometry=geometry_gt[i])
         world = gpd.read_file('geopandas_data/usa-states-census-2014.shp')
-        gdf.plot(
+        fig = gdf.plot(
             ax=world.plot(figsize=(10, 6)), marker='o', color='red', markersize=15
-        ).get_figure().savefig(os.path.join(output_path, f"{i}_gt.png"))
-
+        ).get_figure()
+        fig.axes[0].axis("off")
+        fig.savefig(os.path.join(output_path, f"{i}_gt.png"), bbox_inches='tight', transparent=True)
+        
         df = pd.DataFrame()
         gdf = GeoDataFrame(df, geometry=geometry_predicted[i])
         world = gpd.read_file('geopandas_data/usa-states-census-2014.shp')
-        gdf.plot(
+        fig = gdf.plot(
             ax=world.plot(figsize=(10, 6)), marker='o', color='red', markersize=15
-        ).get_figure().savefig(os.path.join(output_path, f"{i}_predicted.png"))
-        
+        ).get_figure()
+        fig.axes[0].axis("off")
+        fig.savefig(os.path.join(output_path, f"{i}_predicted.png"), bbox_inches='tight', transparent=True)
+
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("eBird training script")

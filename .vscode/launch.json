@@ -37,7 +37,18 @@
             "console": "integratedTerminal",
             "args": [
                 "-c",
-                "configuration/ebird/ebird_base.yaml"
+                "configuration/ebird/ebird_base_3_layer_resnet18_just_a_duck.yaml"
+            ]
+        },
+        {
+            "name": "Python: Eval eBird",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/eval.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-c",
+                "configuration/ebird/ebird_256_geolifeclef_pretrained.yaml"
             ]
         },
         {
@@ -59,7 +70,7 @@
             "console": "integratedTerminal",
             "args": [
                 "-c",
-                "configuration/ebird/ebird_base.yaml"
+                "configuration/ebird/ebird_base_3_layer_resnet18.yaml"
             ]
         }
     ]

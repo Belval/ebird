@@ -38,7 +38,7 @@ def run_one_epoch(
     outputs_acc = []
     targets_acc = []
     for i, (input_images, input_features, targets) in enumerate(validation_dataloader):
-        outputs = model(input_images.to(device), input_features.to(device))
+        outputs, _ = model(input_images.to(device), input_features.to(device))
 
         outputs_acc.append(outputs.detach().cpu())
         targets_acc.append(targets.detach().cpu())

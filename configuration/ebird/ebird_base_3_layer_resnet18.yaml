@@ -20,7 +20,7 @@ MODEL:
     LAYER_COUNT: 3
     INPUT_FEATURES: 592
     OUTPUT_FEATURES: 684
-    PREDICT_LABEL_COUNT: True
+    #PREDICT_LABEL_COUNT: True
   
 TRAINING:
   EPOCHS: 500
@@ -34,7 +34,6 @@ TRAINING:
   LOSS: BCELoss
   BOOST_LOSS: True
 # GeoLifeCLEF pretraining
-#RESUME: #/mnt/network_nvme/experiments/1646976471.5896497/checkpoint_33_10000.pth
-RESUME: #/mnt/network_nvme/experiments/ebird_base_3_layer.yaml/1649037128.7721362/checkpoint_9_1282.pth #/mnt/network_nvme/experiments/256_5_layers/checkpoint_49_1282.pth
+RESUME: /mnt/network_nvme/experiments/ebird_base_3_layer_resnet18.yaml/1649773382.0401528/checkpoint_299_60.pth
 RESET_TRAINING: False
 OUTPUT_DIR: /mnt/network_nvme/experiments/

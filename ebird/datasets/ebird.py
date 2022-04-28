@@ -123,4 +123,4 @@ class EBirdDataset(Dataset):
         if self.transform is not None:
             img = self.transform(img)
 
-        return img, feature_vector, label
+        return img, feature_vector, label, sample["label"]
