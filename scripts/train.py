@@ -12,7 +12,7 @@ import torchvision
 
 from sklearn.metrics import top_k_accuracy_score, f1_score
 
-from ebird.model.model import Model
+from ebird.model.model import create_model
 from ebird.model.checkpointer import Checkpointer
 from ebird.datasets import build_dataset
 from ebird.utils.utils import compute_multilabel_top_k_accuracy
@@ -45,7 +45,8 @@ def run_one_epoch(
         outputs, label_count = model(input_images.to(device), input_features.to(device))
 
         outputs_acc.append(outputs.detach().cpu())
-        label_count_acc.append(label_count.detach().cpu())
+        if label_count is not None:
+            label_count_acc.append(label_count.detach().cpu())
         targets_acc.append(targets.detach().cpu())
 
         if config["BOOST_LOSS"]:
@@ -187,10 +188,11 @@ def run_one_epoch(
             ),
             iteration + i
         )
-        writer.add_scalar(f"{'train' if is_train else 'eval'}/label_count_average_absolute_error",
-            torch.mean(torch.abs(torch.cat(label_count_acc, dim=0).squeeze() - torch.cat(targets_acc, dim=0).sum(dim=-1))),
-            iteration + i
-        )
+        if label_count_acc:
+            writer.add_scalar(f"{'train' if is_train else 'eval'}/label_count_average_absolute_error",
+                torch.mean(torch.abs(torch.cat(label_count_acc, dim=0).squeeze() - torch.cat(targets_acc, dim=0).sum(dim=-1))),
+                iteration + i
+            )
 
     if is_train:
         checkpoint_callback(model, optimizer, epoch, i, loss)
@@ -229,7 +231,7 @@ def main(config_path):
 
     device = "cuda"
 
-    model = Model(config["MODEL"]).to(device)
+    model = create_model(config["MODEL"]).to(device)
 
     print(f"Parameter count: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
 

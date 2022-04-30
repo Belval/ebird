@@ -111,7 +111,7 @@ class EBirdDataset(Dataset):
             other_features[i] = hotspot[k].iloc[0]
         features.append(other_features)
 
-        feature_vector = np.nan_to_num((np.concatenate(features) - MEAN_FEATURES) / STD_FEATURES)
+        feature_vector = np.nan_to_num((np.concatenate(features) - MEAN_FEATURES) / STD_FEATURES).astype(np.float32)
 
         img = np.moveaxis(np.concatenate([
             r[:, starty:starty+self.resolution, startx:startx+self.resolution],
@@ -123,4 +123,4 @@ class EBirdDataset(Dataset):
         if self.transform is not None:
             img = self.transform(img)
 
-        return img, feature_vector, label, sample["label"]
+        return img, feature_vector, label

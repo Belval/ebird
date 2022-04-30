@@ -1,39 +1,36 @@
 DATASET:
   TRAIN:
     TYPE: EBirdDataset
-    BASE_PATH: /mnt/network_nvme/ebird_data/
+    BASE_PATH: ./ebird_data/
     SPLIT_FILE: train_june.txt
     RESOLUTION: 256
   VALIDATION:
     TYPE: EBirdDataset
-    BASE_PATH: /mnt/network_nvme/ebird_data/
+    BASE_PATH: ./ebird_data/
     SPLIT_FILE: test_june.txt
     RESOLUTION: 256
 MODEL:
-  MODEL: multimodal
+  MODEL: mlp
   BACKBONE:
-    CLASS: resnet50
+    CLASS: resnet18
     PRETRAINED: False
     # Important: If this != 3, we will delete the first layer of the network
     INPUT_CHANNELS: 4
   CLASSIFICATION_HEAD:
-    TYPE: mlp
-    INPUT_FEATURES: 2128
+    LAYER_COUNT: 3
     OUTPUT_FEATURES: 684
   
 TRAINING:
-  EPOCHS: 50
-  BATCH_SIZE: 6
+  EPOCHS: 500
+  BATCH_SIZE: 128
   OPTIMIZER:
     ALGORITHM: AdamW
     LEARNING_RATE: 0.0001
   CHECKPOINT_INTERVAL: 1000
   EVALUATION_INTERVAL: 1000
-  LOGGING_INTERVAL: 500
+  LOGGING_INTERVAL: 24
   LOSS: BCELoss
   BOOST_LOSS: True
-# GeoLifeCLEF pretraining
-#RESUME: #/mnt/network_nvme/experiments/1646976471.5896497/checkpoint_33_10000.pth
-RESUME: /mnt/network_nvme/experiments/1648956953.2008972/checkpoint_49_1282.pth #/mnt/network_nvme/experiments/256_5_layers/checkpoint_49_1282.pth
+RESUME: /mnt/network_nvme/experiments/ebird_mlp.yaml/1651111751.9279683/checkpoint_106_60.pth
 RESET_TRAINING: False
 OUTPUT_DIR: /mnt/network_nvme/experiments/

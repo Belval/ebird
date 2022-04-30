@@ -12,7 +12,7 @@ import torchvision
 
 from sklearn.metrics import top_k_accuracy_score, f1_score
 
-from ebird.model.model import Model
+from ebird.model.model import create_model
 from ebird.model.checkpointer import Checkpointer
 from ebird.datasets import build_dataset
 from ebird.utils.utils import compute_multilabel_top_k_accuracy, compute_multilabel_special_top_k_accuracy
@@ -95,7 +95,7 @@ def main(config_path):
 
     device = "cuda"
 
-    model = Model(config["MODEL"]).to(device)
+    model = create_model(config["MODEL"]).to(device)
 
     if config["TRAINING"]["LOSS"] == "CrossEntropyLoss":
         criterion = torch.nn.CrossEntropyLoss()
